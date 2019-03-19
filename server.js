@@ -4,10 +4,24 @@ const path = require('path');
 
 const port = process.env.PORT || 3000;
 
-app.get('/app.js', (req, res, next)=> res.sendFile(path.join(__dirname, 'dist', 'main.js')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get('/', (req, res, next)=> res.sendFile(path.join(__dirname, 'index.html')));
+app.use('/api', require('./api'));
 
+app.get('/app.js', (req, res, next) =>
+  res.sendFile(path.join(__dirname, 'dist', 'main.js'))
+);
 
+app.get('/', (req, res, next) =>
+  res.sendFile(path.join(__dirname, 'index.html'))
+);
 
-app.listen(port, ()=> console.log(`listening on port ${port}`))
+const { syncAndSeed } = require('./db/index');
+
+syncAndSeed()
+  .then(() => {
+    console.log('Data seeded');
+    app.listen(port, () => console.log(`listening on port ${port}`));
+  })
+  .catch(error => console.log(error));
